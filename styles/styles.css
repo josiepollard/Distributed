@@ -1,0 +1,243 @@
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --bg: #f9fafb;
+    --panel: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+}
+
+html, body {
+    height: 100%;
+}
+
+#layout {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#app {
+    flex: 1;
+    display: flex;
+}
+
+/* Sidebar */
+#sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, #4f46e5, #4338ca);
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#sidebar h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Dropdown */
+#sidebar select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: rgb(255, 255, 255, 0.8);
+    color: rgb(0, 0, 0);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+}
+
+/* Chat header */
+#chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 16px;
+    background: var(--panel);
+}
+
+
+/* Main page background */
+body {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+/* Main chat container */
+#chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+/* Message display area */
+#message-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Individual message bubbles */
+.message {
+    max-width: 65%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    position: relative;
+    animation: fadeIn 0.2s ease;
+}
+
+/* Sent */
+.message.sent {
+    background: var(--primary);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+/* Received */
+.message.received {
+    background: white;
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+/* Timestamp inside message bubble */
+.message .timestamp {
+    font-size: 10px;
+    color: rgba(0,0,0,0.4);
+    position: absolute;
+    bottom: -14px;
+    right: 12px;
+}
+
+/* Message input section */
+#message-form {
+    display: flex;
+    padding: 12px;
+    background: white;
+    border-top: 1px solid var(--border);
+    align-items: center;
+    gap: 10px;
+}
+
+/* Message input box */
+#message-input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: #f3f4f6;
+    font-size: 14px;
+    outline: none;
+}
+
+#message-input:focus {
+    border-color: var(--primary);
+    background: white;
+}
+
+/* Send button */
+#send-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#send-button:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+/* File upload button */
+#file-upload-label {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#file-upload-label:hover {
+    background: #d1d5db;
+}
+
+
+
+.message {
+    position: relative;
+}
+
+/* Sent message tail */
+.message.sent::after {
+    content: "";
+    position: absolute;
+    right: -8px;
+    top: 10px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent transparent #007bff;
+}
+
+/* Received message tail */
+.message.received::after {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 10px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent #e4e6eb transparent transparent;
+}
+
+#top-bar {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: #d0d8fc;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+    
+
+  
+
+   
+
+   

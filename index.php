@@ -31,37 +31,54 @@ $users = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>Instant Messenger</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
 
-<p>
-    Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!
-    <a href="logout.php">Logout</a>
-</p>
+<div id="layout">
 
-<!-- Select recipient -->
-<label for="recipient">Chat with:</label>
-<select id="recipient">
-    <option value="">-- Select a user --</option>
-    <?php foreach ($users as $user): ?>
-        <option value="<?php echo (int)$user['user_id']; ?>">
-            <?php echo htmlspecialchars($user['user_name']); ?>
-        </option>
-    <?php endforeach; ?>
-</select>
+    <div id="top-bar">
+        <span>Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
+        <a href="logout.php">Logout</a>
+    </div>
 
-<div id="chat-container">
-    <div id="message-container">Select a user to start chat...</div>
+    <div id="app">
 
-    <form id="message-form" enctype="multipart/form-data" onsubmit="return false;">
-        <input type="text" id="message-input" placeholder="Type your message...">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <h3>Chats</h3>
 
-        <label for="file-upload" id="file-upload-label">📎 Upload</label>
-        <input type="file" id="file-upload" style="display:none;">
+            <select id="recipient">
+                <option value="">-- Select a user --</option>
+                <?php foreach ($users as $user): ?>
+                    <option value="<?php echo (int)$user['user_id']; ?>">
+                        <?php echo htmlspecialchars($user['user_name']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
 
-        <button type="button" id="send-button" onclick="sendMessage()">Send</button>
-    </form>
+        <!-- Chat -->
+        <div id="chat-container">
+
+            <div id="chat-header">
+                <span id="chat-username">Select a user</span>
+            </div>
+
+            <div id="message-container">
+                Select a user to start chat...
+            </div>
+
+            <form id="message-form" enctype="multipart/form-data" onsubmit="return false;">
+                <input type="text" id="message-input" placeholder="Type a message...">
+
+                <label for="file-upload" id="file-upload-label">📎</label>
+                <input type="file" id="file-upload" hidden>
+
+                <button type="button" id="send-button" onclick="sendMessage()">➤</button>
+            </form>
+                </div>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -72,15 +89,18 @@ $users = $stmt->fetchAll();
     let selectedUser = "";
 
     // When user selects a recipient, load messages
-    $("#recipient").change(function () {
-        selectedUser = $(this).val();
+$("#recipient").change(function () {
+    selectedUser = $(this).val();
 
-        if (selectedUser) {
-            loadMessages();
-        } else {
-            $("#message-container").html("Select a user to start chat...");
-        }
-    });
+    const name = $("#recipient option:selected").text();
+    $("#chat-username").text(name);
+
+    if (selectedUser) {
+        loadMessages();
+    } else {
+        $("#message-container").html("Select a user to start chat...");
+    }
+});
 
     function sendMessage() {
         const message = $('#message-input').val();
@@ -122,25 +142,42 @@ $users = $stmt->fetchAll();
         });
     }
 
-    function loadMessages() {
-        if (!selectedUser) return;
+function loadMessages() {
+    if (!selectedUser) return;
 
-        $.ajax({
-            url: 'get_messages.php',
-            type: 'GET',
-            data: { user_to: selectedUser },
-            success: function (response) {
-                $('#message-container').html(response);
+    $('#message-container').html("Loading...");
 
-                // Auto-scroll chat
-                const el = document.getElementById('message-container');
-                el.scrollTop = el.scrollHeight;
-            }
-        });
+    $.ajax({
+        url: 'get_messages.php',
+        type: 'GET',
+        data: { user_to: selectedUser },
+        success: function (response) {
+            $('#message-container').html(response);
+
+            const el = document.getElementById('message-container');
+            el.scrollTop = el.scrollHeight;
+        }
+    });
+}
+
+    // press enter to send
+    $('#message-input').keypress(function(e) {
+    if (e.which === 13) {
+        sendMessage();
     }
+});
+
+$('#file-upload').change(function() {
+    const fileName = this.files[0]?.name || "📎";
+    $('#file-upload-label').text(fileName);
+});
 
     // Poll every 1 second (simple demo technique)
-    setInterval(loadMessages, 1000);
+    setInterval(() => {
+    if (selectedUser) {
+        loadMessages();
+    }
+}, 2000);
 </script>
 
 </body>
