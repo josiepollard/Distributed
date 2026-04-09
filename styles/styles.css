@@ -241,3 +241,17 @@ body {
    
 
    
+.empty-chat { color: #6b7280; }
+#chat-subtitle { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.create-group-box { background: rgba(255,255,255,0.15); padding: 12px; border-radius: 12px; }
+.create-group-box h4 { margin: 0 0 10px 0; }
+.create-group-box input[type='text'] { width: 100%; padding: 10px; border-radius: 8px; border: none; margin-bottom: 10px; box-sizing: border-box; }
+.member-list { max-height: 140px; overflow-y: auto; background: rgba(255,255,255,0.12); border-radius: 8px; padding: 8px; margin-bottom: 10px; }
+.member-list label { display: block; font-size: 13px; margin-bottom: 6px; }
+.small-btn { padding: 10px 12px; border: none; border-radius: 8px; cursor: pointer; }
+#history-limit { padding: 6px; border-radius: 8px; }
+.message-name { font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+.message-date { font-size: 11px; margin-top: 6px; opacity: 0.75; }
+.message-file { margin-top: 8px; }
+.chat-image { max-width: 220px; border-radius: 10px; display: block; }
+#selected-file-name { font-size: 12px; color: #6b7280; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

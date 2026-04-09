@@ -1,11 +1,4 @@
 <?php
-/**
- * index.php
- * ---------
- * Main chat page
- * Only logged-in users can access
- */
-
 session_start();
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -18,13 +11,21 @@ $database = new Database();
 $db = $database->getConnection();
 if (!$db) { exit; }
 
-// Load list of users except current user (so you can select who to chat with)
-$query = "SELECT user_id, user_name FROM users WHERE user_id != :current_user";
+$query = "SELECT user_id, user_name FROM users WHERE user_id != :current_user ORDER BY user_name ASC";
 $stmt = $db->prepare($query);
 $stmt->bindParam(":current_user", $_SESSION['user_id'], PDO::PARAM_INT);
 $stmt->execute();
-
 $users = $stmt->fetchAll();
+
+$groupQuery = "SELECT g.group_id, g.group_name
+               FROM group_chats g
+               JOIN group_chat_members gm ON gm.group_id = g.group_id
+               WHERE gm.user_id = :current_user
+               ORDER BY g.group_name ASC";
+$groupStmt = $db->prepare($groupQuery);
+$groupStmt->bindParam(':current_user', $_SESSION['user_id'], PDO::PARAM_INT);
+$groupStmt->execute();
+$groups = $groupStmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -34,151 +35,239 @@ $users = $stmt->fetchAll();
     <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
-
 <div id="layout">
-
     <div id="top-bar">
         <span>Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
         <a href="logout.php">Logout</a>
     </div>
 
     <div id="app">
-
-        <!-- Sidebar -->
         <div id="sidebar">
-            <h3>Chats</h3>
-
+            <h3>Private Chats</h3>
             <select id="recipient">
                 <option value="">-- Select a user --</option>
                 <?php foreach ($users as $user): ?>
-                    <option value="<?php echo (int)$user['user_id']; ?>">
-                        <?php echo htmlspecialchars($user['user_name']); ?>
-                    </option>
+                    <option value="<?php echo (int)$user['user_id']; ?>"><?php echo htmlspecialchars($user['user_name']); ?></option>
                 <?php endforeach; ?>
             </select>
+
+            <h3>Group Chats</h3>
+            <select id="group-select">
+                <option value="">-- Select a group --</option>
+                <?php foreach ($groups as $group): ?>
+                    <option value="<?php echo (int)$group['group_id']; ?>"><?php echo htmlspecialchars($group['group_name']); ?></option>
+                <?php endforeach; ?>
+            </select>
+
+            <div class="create-group-box">
+                <h4>Create Group</h4>
+                <input type="text" id="group-name" placeholder="Group name">
+                <div class="member-list">
+                    <?php foreach ($users as $user): ?>
+                        <label>
+                            <input type="checkbox" class="group-member" value="<?php echo (int)$user['user_id']; ?>">
+                            <?php echo htmlspecialchars($user['user_name']); ?>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="small-btn" onclick="createGroup()">Create Group</button>
+            </div>
         </div>
 
-        <!-- Chat -->
         <div id="chat-container">
-
             <div id="chat-header">
-                <span id="chat-username">Select a user</span>
+                <div>
+                    <span id="chat-username">Select a chat</span>
+                    <div id="chat-subtitle">You can send messages, pictures and files.</div>
+                </div>
+                
             </div>
 
-            <div id="message-container">
-                Select a user to start chat...
-            </div>
+            <div id="message-container">Select a user or group to start chat...</div>
 
             <form id="message-form" enctype="multipart/form-data" onsubmit="return false;">
                 <input type="text" id="message-input" placeholder="Type a message...">
-
                 <label for="file-upload" id="file-upload-label">📎</label>
                 <input type="file" id="file-upload" hidden>
-
+                <span id="selected-file-name"></span>
                 <button type="button" id="send-button" onclick="sendMessage()">➤</button>
             </form>
-                </div>
+        </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    /**
-     * selectedUser = user_id of the recipient chosen from dropdown
-     */
-    let selectedUser = "";
+let selectedUser = "";
+let selectedGroup = "";
+let chatType = "";
 
-    // When user selects a recipient, load messages
 $("#recipient").change(function () {
     selectedUser = $(this).val();
+    selectedGroup = "";
+    chatType = selectedUser ? "user" : "";
+    $("#group-select").val("");
 
     const name = $("#recipient option:selected").text();
-    $("#chat-username").text(name);
+    $("#chat-username").text(selectedUser ? name : "Select a chat");
+    $("#chat-subtitle").text(selectedUser ? "Private chat" : "You can send messages, pictures and files.");
 
     if (selectedUser) {
         loadMessages();
     } else {
-        $("#message-container").html("Select a user to start chat...");
+        $("#message-container").html("Select a user or group to start chat...");
     }
 });
 
-    function sendMessage() {
-        const message = $('#message-input').val();
-        const file = $('#file-upload')[0].files[0];
+$("#group-select").change(function () {
+    selectedGroup = $(this).val();
+    selectedUser = "";
+    chatType = selectedGroup ? "group" : "";
+    $("#recipient").val("");
 
-        // Must select recipient
-        if (!selectedUser) {
-            alert("Please select a recipient first.");
-            return;
-        }
+    const name = $("#group-select option:selected").text();
+    $("#chat-username").text(selectedGroup ? name : "Select a chat");
+    $("#chat-subtitle").text(selectedGroup ? "Group chat" : "You can send messages, pictures and files.");
 
-        // Must type message or upload file
-        if (message.trim() === "" && !file) {
-            alert("Please enter a message or upload a file!");
-            return;
-        }
+    if (selectedGroup) {
+        loadMessages();
+    } else {
+        $("#message-container").html("Select a user or group to start chat...");
+    }
+});
 
-        const formData = new FormData();
-        formData.append('message', message);
-        formData.append('user_to', selectedUser);
+$("#history-limit").change(function () {
+    if (chatType) {
+        loadMessages();
+    }
+});
 
-        // Attach file if chosen
-        if (file) formData.append('file', file);
+function sendMessage() {
+    const message = $('#message-input').val();
+    const file = $('#file-upload')[0].files[0];
 
-        $.ajax({
-            url: 'send_message.php',
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            success: function () {
-                $('#message-input').val('');
-                $('#file-upload').val('');
-                loadMessages();
-            },
-            error: function(xhr){
-                alert("Send failed: " + xhr.responseText);
-            }
-        });
+    if (!chatType) {
+        alert("Please select a chat first.");
+        return;
     }
 
+    if (message.trim() === "" && !file) {
+        alert("Please enter a message or upload a file.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('message', message);
+    formData.append('chat_type', chatType);
+
+    if (chatType === 'group') {
+        formData.append('group_id', selectedGroup);
+    } else {
+        formData.append('user_to', selectedUser);
+    }
+
+    if (file) {
+        formData.append('file', file);
+    }
+
+    $.ajax({
+        url: 'send_message.php',
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function () {
+            $('#message-input').val('');
+            $('#file-upload').val('');
+            $('#selected-file-name').text('');
+            loadMessages();
+        },
+        error: function(xhr){
+            alert("Send failed: " + xhr.responseText);
+        }
+    });
+}
+
 function loadMessages() {
-    if (!selectedUser) return;
+    if (!chatType) return;
 
     $('#message-container').html("Loading...");
+
+    const data = {
+        chat_type: chatType,
+        history_limit: $('#history-limit').val()
+    };
+
+    if (chatType === 'group') {
+        data.group_id = selectedGroup;
+    } else {
+        data.user_to = selectedUser;
+    }
 
     $.ajax({
         url: 'get_messages.php',
         type: 'GET',
-        data: { user_to: selectedUser },
+        data: data,
         success: function (response) {
             $('#message-container').html(response);
-
             const el = document.getElementById('message-container');
             el.scrollTop = el.scrollHeight;
         }
     });
 }
 
-    // press enter to send
-    $('#message-input').keypress(function(e) {
+function createGroup() {
+    const groupName = $('#group-name').val().trim();
+    const members = [];
+
+    $('.group-member:checked').each(function () {
+        members.push($(this).val());
+    });
+
+    if (groupName === '') {
+        alert('Please enter a group name');
+        return;
+    }
+
+    if (members.length === 0) {
+        alert('Please choose at least one member');
+        return;
+    }
+
+    $.ajax({
+        url: 'create_group.php',
+        type: 'POST',
+        data: {
+            group_name: groupName,
+            members: members
+        },
+        success: function () {
+            alert('Group created. Reload the page to see it in the list.');
+            $('#group-name').val('');
+            $('.group-member').prop('checked', false);
+        },
+        error: function(xhr) {
+            alert('Could not create group: ' + xhr.responseText);
+        }
+    });
+}
+
+$('#message-input').keypress(function(e) {
     if (e.which === 13) {
         sendMessage();
     }
 });
 
 $('#file-upload').change(function() {
-    const fileName = this.files[0]?.name || "📎";
-    $('#file-upload-label').text(fileName);
+    const fileName = this.files[0]?.name || '';
+    $('#selected-file-name').text(fileName);
 });
 
-    // Poll every 1 second (simple demo technique)
-    setInterval(() => {
-    if (selectedUser) {
+setInterval(() => {
+    if (chatType) {
         loadMessages();
     }
 }, 2000);
 </script>
-
 </body>
 </html>
