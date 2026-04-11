@@ -109,7 +109,7 @@ $user = $stmt->fetch();
 <html>
 <head>
     <title>Settings</title>
-    <link rel="stylesheet" href="styles/settings.css">
+
     <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
