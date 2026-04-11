@@ -26,7 +26,7 @@ html, body {
 /* Sidebar */
 #sidebar {
     width: 260px;
-    background: linear-gradient(180deg, #4f46e5, #4338ca);
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
     color: white;
     padding: 20px;
     display: flex;
@@ -83,7 +83,7 @@ body {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    background: #f9fafb;
+    background: var(--bg);
     display: flex;
     flex-direction: column;
     gap: 12px;
