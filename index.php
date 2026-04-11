@@ -38,7 +38,7 @@ $groups = $groupStmt->fetchAll();
 <div id="layout">
     <div id="top-bar">
         <span>Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
-        <a href="logout.php">Logout</a>
+        <a href="logout.php" class="logout-btn">Logout</a>
     </div>
 
     <div id="app">
@@ -136,11 +136,7 @@ $("#group-select").change(function () {
     }
 });
 
-$("#history-limit").change(function () {
-    if (chatType) {
-        loadMessages();
-    }
-});
+
 
 function sendMessage() {
     const message = $('#message-input').val();
@@ -195,7 +191,6 @@ function loadMessages() {
 
     const data = {
         chat_type: chatType,
-        history_limit: $('#history-limit').val()
     };
 
     if (chatType === 'group') {
