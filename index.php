@@ -159,13 +159,13 @@ $recentChats = $recentStmt->fetchAll();
 
             <div id="message-container">Select a user or group to start chat...</div>
 
-            <form id="message-form" enctype="multipart/form-data" onsubmit="return false;">
-                <input type="text" id="message-input" placeholder="Type a message...">
-                <label for="file-upload" id="file-upload-label">📎</label>
-                <input type="file" id="file-upload" hidden>
-                <span id="selected-file-name"></span>
-                <button type="button" id="send-button" onclick="sendMessage()">➤</button>
-            </form>
+            <form id="message-form" enctype="multipart/form-data" onsubmit="return false;" style="display: none;">
+    <input type="text" id="message-input" placeholder="Type a message...">
+    <label for="file-upload" id="file-upload-label">📎</label>
+    <input type="file" id="file-upload" hidden>
+    <span id="selected-file-name"></span>
+    <button type="button" id="send-button" onclick="sendMessage()">➤</button>
+</form>
         </div>
     </div>
 </div>
@@ -216,11 +216,13 @@ $("#recipient").change(function () {
     $("#chat-username").text(selectedUser ? name : "Select a chat");
     $("#chat-subtitle").text(selectedUser ? "Private chat" : "You can send messages, pictures and files.");
 
-    if (selectedUser) {
-        loadMessages();
-    } else {
-        $("#message-container").html("Select a user or group to start chat...");
-    }
+   if (selectedUser) {
+    $('#message-form').show();
+    loadMessages();
+} else {
+    $('#message-container').html("Select a user or group to start chat...");
+    $('#message-form').hide();
+}
 });
 
 $("#group-select").change(function () {
@@ -235,10 +237,12 @@ $("#group-select").change(function () {
     $("#chat-subtitle").text(selectedGroup ? "Group chat" : "You can send messages, pictures and files.");
 
     if (selectedGroup) {
-        loadMessages();
-    } else {
-        $("#message-container").html("Select a user or group to start chat...");
-    }
+    $('#message-form').show();
+    loadMessages();
+} else {
+    $('#message-container').html("Select a user or group to start chat...");
+    $('#message-form').hide();
+}
 });
 
 
@@ -379,6 +383,7 @@ function selectRecent(type, id, name) {
     }
 
     $("#chat-username").text(name);
+    $('#message-form').show();
     loadMessages();
 }
 
