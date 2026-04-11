@@ -111,6 +111,13 @@ $user = $stmt->fetch();
     <title>Settings</title>
 
     <link rel="stylesheet" href="styles/styles.css">
+
+    <script>
+// Apply saved theme BEFORE page renders
+if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.classList.add('dark-mode');
+}
+</script>
 </head>
 <body>
 
@@ -150,6 +157,20 @@ $user = $stmt->fetch();
                         <button type="submit">Upload</button>
                     </form>
                 </div>
+                <div class="settings-card">
+                    <h3>Dark Mode</h3>
+
+                    <div class="theme-toggle">
+                <label>
+                    <input type="checkbox" id="theme-switch">
+                    Dark Mode
+                </label>
+            </div>
+                </div>
+
+
+
+                
             </div>
 
             <!-- RIGHT COLUMN -->
@@ -166,7 +187,7 @@ $user = $stmt->fetch();
                 <div class="settings-card">
                     <h3>Change Password</h3>
                     <form method="post">
-                        <input type="password" name="current_password" placeholder="Current password" required>
+                        <input type="password" name="current_password"  placeholder="Current password" required>
                         <input type="password" name="new_password" placeholder="New password" required>
                         <input type="password" name="confirm_password" placeholder="Confirm new password" required>
                         <button type="submit" name="change_password">Change</button>
@@ -189,5 +210,28 @@ $user = $stmt->fetch();
                     </div>
 </div>
 
+
+
+
+<script>
+const toggle = document.getElementById('theme-switch');
+
+// Load saved preference
+if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.classList.add('dark-mode');
+    toggle.checked = true;
+}
+
+// Toggle
+toggle.addEventListener('change', () => {
+    if (toggle.checked) {
+        document.documentElement.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+    }
+});
+</script>
 </body>
 </html>

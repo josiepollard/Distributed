@@ -77,6 +77,14 @@ $recentChats = $recentStmt->fetchAll();
     <meta charset="UTF-8">
     <title>Instant Messenger</title>
     <link rel="stylesheet" href="styles/styles.css">
+
+<script>
+// Apply saved theme BEFORE page renders
+if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.classList.add('dark-mode');
+}
+</script>
+
 </head>
 <body>
 <div id="layout">

@@ -137,11 +137,6 @@ body {
     outline: none;
 }
 
-#message-input:focus {
-    border-color: var(--primary);
-    background: white;
-}
-
 #send-button {
     width: 40px;
     height: 40px;
@@ -175,7 +170,7 @@ body {
 }
 
 .message.sent::after {
-    
+
     position: absolute;
     right: -8px;
     top: 10px;
@@ -425,12 +420,12 @@ body {
     justify-content: flex-end;
 }
 
-.cancel-btn {
+.cancel-btn, .small-btn {
     padding: 10px 12px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    background: #d9d9d9;
+    background: #fff;
 }
 
 
@@ -551,6 +546,106 @@ body {
 .settings-content {
     padding: 30px;
 }
+
+/* DARK MODE */ 
+
+.theme-toggle {
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.theme-toggle input {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.dark-mode {
+    background-color: #1e1e1e;
+    color: #e4e4e4;
+
+    body {
+        color: #fff;
+    }
+
+    #message-container {
+        background: #000;
+    }
+
+    .message.received {
+        background: rgb(41, 39, 39);
+        color: #fff;
+        border: #000;
+    }
+
+    #message-form {
+        background: #000;
+        border-top: 1px solid rgb(41, 39, 39); 
+    }
+    #message-input {
+        border: 1px solid rgb(41, 39, 39);
+        background:rgb(41, 39, 39);
+    }
+
+    #top-bar {
+        background-color: rgb(41, 39, 39);
+        border-bottom: 2px solid #000;
+        flex-shrink: 0;
+    }
+    .modal-box, .modal-member-list {
+        background: rgb(41, 39, 39);
+        border: 1px solid #000;
+    }
+   
+    .modal-body input[type="text"] {
+        background: rgb(41, 39, 39);
+        color: #fff;
+        border: 1px solid #000;
+    }
+
+    .settings-card {
+         background: #000;
+        border: 3px solid rgb(41, 39, 39);
+    }
+
+    .profile-img {
+        border: 2px solid #000;
+    }
+    #chat-header {
+        background-color: rgb(41, 39, 39);
+        border-bottom: #000;
+    }
+   
+    input[type="text"],
+    input[type="password"],
+    input[type="file"],
+    textarea,
+    select {
+        background-color: #2a2a2a;
+        color: #ffffff;
+        border: 1px solid #555;
+    }
+    input::placeholder {
+        color: #bbb;
+    }
+    input:focus {
+        border-color: #6c8cff;
+        outline: none;
+        background-color: #2f2f2f;
+    }
+    input[type="file"] {
+        background-color: #2a2a2a;
+        color: #fff;
+    }
+    #message-input {
+        background-color: #2a2a2a;
+        color: #fff;
+        border: 1px solid #555;
+    }
+
+
+}
+
+
 
 @keyframes fadeIn {
     from {
