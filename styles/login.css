@@ -49,11 +49,25 @@
     }
 
 
-    .error {
-        color: red;
-        margin-bottom: 10px;
-        font-size: 14px;
-    }
+   .error {
+    background: #ffe6e6;
+    color: #c53030;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    border: 1px solid #feb2b2;
+}
+
+ .success {
+    background: #e6fffa;
+    color: #2f855a;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    border: 1px solid #b2f5ea;
+}
 
     .footer-text {
         margin-top: 15px;

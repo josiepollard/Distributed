@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($check->fetch()) {
             $error = "Username already exists.";
         } else {
-            // password_hash already uses a salt automatically.
+            // password_hash uses a salt automatically.
             $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
             $query = "INSERT INTO users (user_name, password)
@@ -52,14 +52,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <div class="register-container">
     <?php if (!empty($success)): ?>
         <div class="success">
-            <?php echo $success; ?>
+            <?php echo htmlspecialchars($success); ?>
             <br>
             <a href="login.php">Click here to login</a>
         </div>
     <?php endif; ?>
 
     <?php if (!empty($error)): ?>
-        <div class="error"><?php echo $error; ?></div>
+        <div class="error">
+            <?php echo htmlspecialchars($error); ?>
+        </div>
     <?php endif; ?>
 
     <h2>Create Account</h2>

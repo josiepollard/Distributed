@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         header("Location: index.php");
         exit;
     } else {
-        echo "Invalid login credentials.";
+        $error = "Invalid login credentials.";
     }
 }
 ?>
@@ -56,6 +56,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <body>
 
 <div class="login-container">
+
+<?php if (!empty($error)): ?>
+    <div class="error"><?php echo htmlspecialchars($error); ?></div>
+<?php endif; ?>
     <h2>Welcome Back</h2>
 
     <form method="post">
