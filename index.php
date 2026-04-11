@@ -29,19 +29,44 @@ $groups = $groupStmt->fetchAll();
 
 // RECENT CHATS (last 5 private conversations)
 $recentQuery = "
-    SELECT u.user_id, u.user_name, u.profile_pic, MAX(m.date_sent) as last_msg
-    FROM messages m
-    JOIN users u ON (
-        (m.user_from = :uid AND u.user_id = m.user_to)
-        OR
-        (m.user_to = :uid AND u.user_id = m.user_from)
+    (
+        -- PRIVATE CHATS
+        SELECT 
+            u.user_id AS id,
+            u.user_name AS name,
+            u.profile_pic,
+            'user' AS type,
+            MAX(m.date_sent) AS last_msg
+        FROM messages m
+        JOIN users u ON (
+            (m.user_from = :uid AND u.user_id = m.user_to)
+            OR
+            (m.user_to = :uid AND u.user_id = m.user_from)
+        )
+        WHERE m.group_id IS NULL
+        GROUP BY u.user_id, u.user_name, u.profile_pic
     )
-    WHERE m.group_id IS NULL
-    GROUP BY u.user_id, u.user_name, u.profile_pic
+
+    UNION
+
+    (
+        -- GROUP CHATS
+        SELECT 
+            g.group_id AS id,
+            g.group_name AS name,
+            NULL AS profile_pic,
+            'group' AS type,
+            MAX(m.date_sent) AS last_msg
+        FROM messages m
+        JOIN group_chats g ON m.group_id = g.group_id
+        JOIN group_chat_members gm ON gm.group_id = g.group_id
+        WHERE gm.user_id = :uid
+        GROUP BY g.group_id, g.group_name
+    )
+
     ORDER BY last_msg DESC
     LIMIT 5
 ";
-
 $recentStmt = $db->prepare($recentQuery);
 $recentStmt->execute([':uid' => $_SESSION['user_id']]);
 $recentChats = $recentStmt->fetchAll();
@@ -72,20 +97,29 @@ $recentChats = $recentStmt->fetchAll();
             <?php if (!empty($recentChats)): ?>
                 <ul class="recent-list">
                     <?php foreach ($recentChats as $chat): ?>
-                        <li onclick="selectRecentUser(<?php echo (int)$chat['user_id']; ?>, '<?php echo htmlspecialchars($chat['user_name']); ?>')">
+                        <li onclick="selectRecent('<?php echo $chat['type']; ?>', <?php echo (int)$chat['id']; ?>, '<?php echo htmlspecialchars($chat['name']); ?>')">
 
-                            <?php
-                            $profilePic = !empty($chat['profile_pic']) 
-                                ? htmlspecialchars($chat['profile_pic']) 
-                                : 'uploads/default.png';
-                            ?>
+    <?php if ($chat['type'] === 'user'): ?>
 
-                            <img src="<?php echo $profilePic; ?>" 
-                                class="recent-avatar"
-                                onerror="this.src='uploads/default.png'">
+        <?php
+        $profilePic = !empty($chat['profile_pic']) 
+            ? htmlspecialchars($chat['profile_pic']) 
+            : 'uploads/default.png';
+        ?>
 
-                            <?php echo htmlspecialchars($chat['user_name']); ?>
-                        </li>
+        <img src="<?php echo $profilePic; ?>" 
+             class="recent-avatar"
+             onerror="this.src='uploads/default.png'">
+
+    <?php else: ?>
+
+        <!-- simple group icon -->
+        <div class="group-icon">📍</div>
+
+    <?php endif; ?>
+
+    <?php echo htmlspecialchars($chat['name']); ?>
+</li>
                     <?php endforeach; ?>
                 </ul>
             <?php else: ?>
@@ -108,20 +142,8 @@ $recentChats = $recentStmt->fetchAll();
                     <option value="<?php echo (int)$group['group_id']; ?>"><?php echo htmlspecialchars($group['group_name']); ?></option>
                 <?php endforeach; ?>
             </select>
+            <button type="button" class="small-btn" onclick="openGroupModal()">Create New Group</button>
 
-            <div class="create-group-box">
-                <h4>Create Group</h4>
-                <input type="text" id="group-name" placeholder="Group name">
-                <div class="member-list">
-                    <?php foreach ($users as $user): ?>
-                        <label>
-                            <input type="checkbox" class="group-member" value="<?php echo (int)$user['user_id']; ?>">
-                            <?php echo htmlspecialchars($user['user_name']); ?>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-                <button type="button" class="small-btn" onclick="createGroup()">Create Group</button>
-            </div>
 
             
         </div>
@@ -144,6 +166,34 @@ $recentChats = $recentStmt->fetchAll();
                 <span id="selected-file-name"></span>
                 <button type="button" id="send-button" onclick="sendMessage()">➤</button>
             </form>
+        </div>
+    </div>
+</div>
+
+
+<div id="group-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Create Group</h3>
+            <button type="button" class="close-modal-btn" onclick="closeGroupModal()">×</button>
+        </div>
+
+        <div class="modal-body">
+            <input type="text" id="group-name" placeholder="Group name">
+
+            <div class="member-list modal-member-list">
+                <?php foreach ($users as $user): ?>
+                    <label>
+                        <input type="checkbox" class="group-member" value="<?php echo (int)$user['user_id']; ?>">
+                        <?php echo htmlspecialchars($user['user_name']); ?>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="small-btn" onclick="createGroup()">Create</button>
+                <button type="button" class="cancel-btn" onclick="closeGroupModal()">Cancel</button>
+            </div>
         </div>
     </div>
 </div>
@@ -294,28 +344,41 @@ function createGroup() {
             members: members
         },
         success: function () {
-            alert('Group created. Reload the page to see it in the list.');
-            $('#group-name').val('');
-            $('.group-member').prop('checked', false);
-        },
+    alert('Group created. Reload the page to see it in the list.');
+    $('#group-name').val('');
+    $('.group-member').prop('checked', false);
+    closeGroupModal();
+},
         error: function(xhr) {
             alert('Could not create group: ' + xhr.responseText);
         }
     });
 }
 
-function selectRecentUser(userId, userName) {
-    selectedUser = userId;
-    selectedGroup = "";
-    chatType = "user";
+function selectRecent(type, id, name) {
     lastMessagesHtml = "";
 
-    $("#recipient").val(userId);
-    $("#group-select").val("");
+    if (type === "user") {
+        selectedUser = id;
+        selectedGroup = "";
+        chatType = "user";
 
-    $("#chat-username").text(userName);
-    $("#chat-subtitle").text("Private chat");
+        $("#recipient").val(id);
+        $("#group-select").val("");
 
+        $("#chat-subtitle").text("Private chat");
+    } else {
+        selectedGroup = id;
+        selectedUser = "";
+        chatType = "group";
+
+        $("#group-select").val(id);
+        $("#recipient").val("");
+
+        $("#chat-subtitle").text("Group chat");
+    }
+
+    $("#chat-username").text(name);
     loadMessages();
 }
 
@@ -330,6 +393,13 @@ $('#file-upload').change(function() {
     $('#selected-file-name').text(fileName);
 });
 
+function openGroupModal() {
+    $('#group-modal').fadeIn(150);
+}
+
+function closeGroupModal() {
+    $('#group-modal').fadeOut(150);
+}
 
 setInterval(() => {
     if (chatType) {
