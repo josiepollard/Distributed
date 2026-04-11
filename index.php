@@ -114,7 +114,7 @@ $recentChats = $recentStmt->fetchAll();
     <?php else: ?>
 
         <!-- simple group icon -->
-        <div class="group-icon">📍</div>
+        <div class="group-icon">🙂</div>
 
     <?php endif; ?>
 

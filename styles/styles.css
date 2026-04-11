@@ -349,7 +349,7 @@ body {
     width: 35px;
     height: 35px;
     border-radius: 50%;
-    background-color: #ffffff;
+    background-color: #1e0858;
     color: white;
     display: flex;
     align-items: center;
@@ -568,9 +568,3 @@ body {
         grid-template-columns: 1fr;
     }
 }
-
-
-
-
-
-
