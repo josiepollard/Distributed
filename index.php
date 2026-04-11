@@ -348,10 +348,15 @@ function createGroup() {
             members: members
         },
         success: function () {
-    alert('Group created. Reload the page to see it in the list.');
+    alert('Group created');
+
+    // clear form
     $('#group-name').val('');
     $('.group-member').prop('checked', false);
     closeGroupModal();
+
+    // reload group dropdown + recent chats
+    location.reload();
 },
         error: function(xhr) {
             alert('Could not create group: ' + xhr.responseText);
