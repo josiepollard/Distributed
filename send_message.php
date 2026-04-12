@@ -1,6 +1,7 @@
 <?php
 session_start();
 include_once __DIR__ . '/database.php';
+include_once 'encryption.php';
 
 ini_set('upload_max_filesize', '10M');
 ini_set('post_max_size', '10M');
@@ -18,7 +19,14 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_from = (int)$_SESSION['user_id'];
 $chat_type = $_POST['chat_type'] ?? 'user';
+
 $message = trim($_POST['message'] ?? '');
+
+if ($message !== '') {
+    $message = encryptMessage($message);
+}
+
+
 $file_path = null;
 $user_to = null;
 $group_id = null;

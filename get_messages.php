@@ -6,6 +6,7 @@ if (!isset($_SESSION['user_id'])) {
 
 include_once 'database.php';
 include_once 'message.php';
+include_once 'encryption.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -58,7 +59,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     }
 
     if (!empty($row['message'])) {
-        echo "<div>" . nl2br(htmlspecialchars($row['message'])) . "</div>";
+        $decrypted = decryptMessage($row['message']);
+
+echo "<div>" . nl2br(htmlspecialchars($decrypted)) . "</div>";
     }
 
     if (!empty($row['file_path'])) {
