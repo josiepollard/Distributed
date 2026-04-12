@@ -9,6 +9,74 @@ include_once __DIR__ . '/database.php';
 
 $database = new Database();
 $db = $database->getConnection();
+if (isset($_GET['fetch']) && $_GET['fetch'] === 'recent') {
+
+    $recentQuery = "
+        (
+            SELECT 
+                u.user_id AS id,
+                u.user_name AS name,
+                u.profile_pic,
+                'user' AS type,
+                MAX(m.date_sent) AS last_msg
+            FROM messages m
+            JOIN users u ON (
+                (m.user_from = :uid AND u.user_id = m.user_to)
+                OR
+                (m.user_to = :uid AND u.user_id = m.user_from)
+            )
+            WHERE m.group_id IS NULL
+            GROUP BY u.user_id, u.user_name, u.profile_pic
+        )
+
+        UNION
+
+        (
+            SELECT 
+                g.group_id AS id,
+                g.group_name AS name,
+                NULL AS profile_pic,
+                'group' AS type,
+                MAX(m.date_sent) AS last_msg
+            FROM messages m
+            JOIN group_chats g ON m.group_id = g.group_id
+            JOIN group_chat_members gm ON gm.group_id = g.group_id
+            WHERE gm.user_id = :uid
+            GROUP BY g.group_id, g.group_name
+        )
+
+        ORDER BY last_msg DESC
+        LIMIT 5
+    ";
+
+    $stmt = $db->prepare($recentQuery);
+    $stmt->execute([':uid' => $_SESSION['user_id']]);
+    $recentChats = $stmt->fetchAll();
+
+    if (!$recentChats) {
+        echo "<div class='empty-recent'>No recent chats</div>";
+        exit;
+    }
+
+    echo "<ul class='recent-list'>";
+    foreach ($recentChats as $chat) {
+
+        echo "<li onclick=\"selectRecent('{$chat['type']}', {$chat['id']}, '" . htmlspecialchars($chat['name']) . "')\">";
+
+        if ($chat['type'] === 'user') {
+            $pic = !empty($chat['profile_pic']) ? $chat['profile_pic'] : 'uploads/default.png';
+            echo "<img src='$pic' class='recent-avatar'>";
+        } else {
+            echo "<div class='group-icon'>🙂</div>";
+        }
+
+        echo htmlspecialchars($chat['name']);
+        echo "</li>";
+    }
+    echo "</ul>";
+
+    exit; // IMPORTANT
+}
 if (!$db) { exit; }
 
 $query = "SELECT user_id, user_name FROM users WHERE user_id != :current_user ORDER BY user_name ASC";
@@ -102,37 +170,7 @@ if (localStorage.getItem('theme') === 'dark') {
         <div id="sidebar">
             <h3>Recent Chats</h3>
 
-            <?php if (!empty($recentChats)): ?>
-                <ul class="recent-list">
-                    <?php foreach ($recentChats as $chat): ?>
-                        <li onclick="selectRecent('<?php echo $chat['type']; ?>', <?php echo (int)$chat['id']; ?>, '<?php echo htmlspecialchars($chat['name']); ?>')">
-
-    <?php if ($chat['type'] === 'user'): ?>
-
-        <?php
-        $profilePic = !empty($chat['profile_pic']) 
-            ? htmlspecialchars($chat['profile_pic']) 
-            : 'uploads/default.png';
-        ?>
-
-        <img src="<?php echo $profilePic; ?>" 
-             class="recent-avatar"
-             onerror="this.src='uploads/default.png'">
-
-    <?php else: ?>
-
-        <!-- simple group icon -->
-        <div class="group-icon">🙂</div>
-
-    <?php endif; ?>
-
-    <?php echo htmlspecialchars($chat['name']); ?>
-</li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php else: ?>
-                <div class="empty-recent">No recent chats</div>
-            <?php endif; ?>
+            <div id="recent-chats"></div>
 
 
             <h3>Private Chats</h3>
@@ -289,12 +327,14 @@ function sendMessage() {
         data: formData,
         contentType: false,
         processData: false,
-        success: function () {
-            $('#message-input').val('');
-            $('#file-upload').val('');
-            $('#selected-file-name').text('');
-            loadMessages();
-        },
+       success: function () {
+    $('#message-input').val('');
+    $('#file-upload').val('');
+    $('#selected-file-name').text('');
+
+    loadMessages();
+    loadRecentChats(); // ✅ THIS is the key line
+},
         error: function(xhr){
             alert("Send failed: " + xhr.responseText);
         }
@@ -418,6 +458,20 @@ function openGroupModal() {
 function closeGroupModal() {
     $('#group-modal').fadeOut(150);
 }
+
+
+function loadRecentChats() {
+    $.ajax({
+        url: 'index.php?fetch=recent',
+        success: function (html) {
+            $('#recent-chats').html(html);
+        }
+    });
+}
+
+$(document).ready(function () {
+    loadRecentChats();
+});
 
 setInterval(() => {
     if (chatType) {
